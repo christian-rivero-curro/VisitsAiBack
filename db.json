@@ -517,5 +517,35 @@
     "todayVisits": 18,
     "pendingVisits": 4,
     "activeVisits": 5
-  }
+  },
+  "users": [
+    {
+      "id": "12345678Z",
+      "fullName": "Juan Garcia",
+      "role": "admin",
+      "building": "Gràcia",
+      "lastAccess": "2025-06-24T10:00:00Z"
+    },
+    {
+      "id": "87654321X",
+      "fullName": "Maria Lopez",
+      "role": "employee",
+      "building": "Eixample",
+      "lastAccess": "2025-06-24T11:30:00Z"
+    },
+    {
+      "id": "11223344V",
+      "fullName": "Pedro Martinez",
+      "role": "master",
+      "building": "Born",
+      "lastAccess": "2025-06-25T09:15:00Z"
+    },
+    {
+      "id": "99887766C",
+      "fullName": "Laura Fernandez",
+      "role": "employee",
+      "building": "Poble Sec",
+      "lastAccess": "2025-06-25T14:00:00Z"
+    }
+  ]
 }

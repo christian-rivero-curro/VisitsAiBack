@@ -29,3 +29,11 @@ export interface VisitRegistrationPayload {
     employeeId: number;
   };
 }
+
+export interface User {
+  id: string; // Using dni as id
+  fullName: string;
+  role: string; // Simplified role as a string
+  building: string; // Barcelona neighborhood names
+  lastAccess: string; // ISO string for date/time
+}

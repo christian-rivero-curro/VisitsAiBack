@@ -10,6 +10,7 @@ dotenv.config();
 import employeeRoutes from './api/employeeRoutes';
 import visitRoutes from './api/visitRoutes';
 import statisticsRoutes from './api/statisticsRoutes';
+import userRoutes from './api/userRoutes'; // New: Import user routes
 
 
 const app = express();
@@ -40,6 +41,7 @@ app.get('/health', (req, res) => {
 app.use('/api/employees', employeeRoutes);
 app.use('/api/visits', visitRoutes);
 app.use('/api/statistics', statisticsRoutes);
+app.use('/api/users', userRoutes); // New: Use user routes
 
 // Middleware para manejar rutas no encontradas globalmente
 app.use('*', (req, res) => {
@@ -52,7 +54,9 @@ app.use('*', (req, res) => {
       'GET /api/visits',
       'POST /api/visits',
       'PATCH /api/visits/:id',
-      'GET /api/statistics'
+      'GET /api/statistics',
+      'GET /api/users', // New: Add to available endpoints
+      'GET /api/users/:id' // New: Add to available endpoints
     ]
   });
 });
