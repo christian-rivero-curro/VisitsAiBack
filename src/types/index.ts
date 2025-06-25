@@ -12,6 +12,9 @@ export interface VisitorData {
   dni: string;
   name: string;
   company: string;
+}
+
+export interface VisitDetails {
   reason: string;
   cardNumber: string;
   visitors: number;
@@ -21,6 +24,7 @@ export interface VisitorData {
 
 export interface VisitRegistrationPayload {
   visitor: VisitorData;
+  visitDetails: VisitDetails;
   visit: {
     employeeId: number;
   };

@@ -11,6 +11,9 @@ export const createVisit = async (payload: VisitRegistrationPayload) => {
   const { visitor, visitDetails, visit } = payload;
   const createdAt = new Date();
 
+  // Obtener datos del empleado
+  const employeeData = await getEmployeeById(visit.employeeId);
+
   const visitToCreate = {
     visitor: {
       dni: visitor.dni,
@@ -18,7 +21,7 @@ export const createVisit = async (payload: VisitRegistrationPayload) => {
       company: visitor.company
     },
     visit: {
-      ...(await getEmployeeById(visit.employeeId))
+      ...employeeData
     },
     visitDetails: {
       reason: visitDetails.reason,
@@ -49,14 +52,14 @@ export const createVisit = async (payload: VisitRegistrationPayload) => {
 
 /**
  * Obtiene una lista de visitas aplicando los filtros proporcionados.
- * Combina la búsqueda por campos anidados con el filtrado manual por fechas
- * y "aplana" la respuesta para mantener la compatibilidad con el frontend.
  */
 export const getVisits = async (filters: any) => {
     const query = new URLSearchParams();
-    if (filters.status) query.append('status', filters.status);
-    if (filters.name_like) query.append('visitor.name_like', filters.name_like);
-    if (filters.dni_like) query.append('visitor.dni_like', filters.dni_like);
+    
+    // Filtros básicos que json-server puede manejar directamente
+    if (filters.status) {
+        query.append('status', filters.status);
+    }
 
     const response = await fetch(`${JSON_SERVER_URL}/visits?${query.toString()}`);
     if (!response.ok) {
@@ -65,67 +68,92 @@ export const getVisits = async (filters: any) => {
 
     let visits = await response.json();
     
-    // Filtrado manual por fechas (fusionado desde la versión anterior)
+    // Filtrado manual para campos anidados y fechas
+    if (filters.name_like) {
+        const searchTerm = filters.name_like.toLowerCase();
+        visits = visits.filter((v: any) => 
+            v.visitor?.name?.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    if (filters.dni_like) {
+        const searchTerm = filters.dni_like.toLowerCase();
+        visits = visits.filter((v: any) => 
+            v.visitor?.dni?.toLowerCase().includes(searchTerm)
+        );
+    }
+    
     if (filters.startDate) {
         const start = new Date(filters.startDate);
-        start.setHours(0,0,0,0);
+        start.setHours(0, 0, 0, 0);
         visits = visits.filter((v: any) => new Date(v.createdAt) >= start);
     }
+    
     if (filters.endDate) {
         const end = new Date(filters.endDate);
-        end.setHours(23,59,59,999);
+        end.setHours(23, 59, 59, 999);
         visits = visits.filter((v: any) => new Date(v.createdAt) <= end);
     }
 
     // Ordenar por fecha de creación descendente
     visits.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    // APLANAMOS LA RESPUESTA: Se combinan `visitor` y `visitDetails`
-    // para que el frontend no necesite cambios en cómo muestra los datos.
+    // Aplanar la respuesta para compatibilidad con el frontend
     return visits.map((v: any) => ({
-      ...v,
-      visitor: {
-        ...v.visitor,
-        ...v.visitDetails
-      }
+        ...v,
+        visitor: {
+            ...v.visitor,
+            ...v.visitDetails
+        }
     }));
 };
 
 /**
- * Da de baja una visita, actualizando su estado, la hora de fin y las observaciones.
- * Actualiza tanto los campos de nivel superior como los campos anidados en `visitDetails`.
+ * Da de baja una visita actualizando su estado y hora de fin.
+ * Primero obtiene la visita completa, modifica los campos necesarios y la actualiza.
  */
 export const dischargeVisitor = async (id: number, observations: string) => {
-  const endTime = new Date();
-  
-  const response = await fetch(`${JSON_SERVER_URL}/visits/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      status: 'completed',
-      endTime: endTime.toISOString(),
-      dischargeObservations: observations,
-      visitDetails: {
-          hourFi: endTime.toTimeString().split(' ')[0]
-      }
-    }),
-  });
+    // Primero obtenemos la visita completa
+    const getResponse = await fetch(`${JSON_SERVER_URL}/visits/${id}`);
+    if (!getResponse.ok) {
+        throw new Error('Failed to fetch visit for update');
+    }
+    
+    const currentVisit = await getResponse.json();
+    const endTime = new Date();
+    
+    // Actualizamos la estructura completa
+    const updatedVisit = {
+        ...currentVisit,
+        status: 'completed',
+        endTime: endTime.toISOString(),
+        dischargeObservations: observations,
+        visitDetails: {
+            ...currentVisit.visitDetails,
+            hourFi: endTime.toTimeString().split(' ')[0]
+        }
+    };
 
-  if (!response.ok) {
-    throw new Error('Failed to update visit in json-server');
-  }
+    const response = await fetch(`${JSON_SERVER_URL}/visits/${id}`, {
+        method: 'PUT', // Usamos PUT para reemplazar el objeto completo
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedVisit)
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to update visit in json-server');
+    }
 };
 
 /**
  * Función auxiliar para obtener los datos de un empleado por su ID.
- * Excluye el 'id' del empleado para que la estructura coincida con la anidada en la visita.
  */
 async function getEmployeeById(id: number) {
     const res = await fetch(`${JSON_SERVER_URL}/employees/${id}`);
     if (!res.ok) {
-      console.error(`Employee with id ${id} not found.`);
-      return {};
-    };
+        console.error(`Employee with id ${id} not found.`);
+        return {};
+    }
     const employee = await res.json();
     const { id: empId, ...rest } = employee;
     return rest;

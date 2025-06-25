@@ -1,0 +1,519 @@
+{
+  "visits": [
+    {
+      "id": 1,
+      "visitor": {
+        "dni": "12345678A",
+        "name": "Juan Pérez",
+        "company": "Empresa ABC"
+      },
+      "visit": {
+        "name": "María González",
+        "dg": "Dirección General",
+        "orgUnit": "Departamento Comercial",
+        "service": "Ventas",
+        "location": "Planta 2, Oficina 201",
+        "phone": "93 123 45 67"
+      },
+      "status": "pending",
+      "createdAt": "2024-06-20T09:30:00Z",
+      "visitDetails": {
+        "reason": "Reunión comercial",
+        "cardNumber": "001",
+        "visitors": 1,
+        "color": "azul",
+        "observations": "Visita programada para las 10:00",
+        "date": "2024-06-20",
+        "hourIni": "09:30:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 2,
+      "visitor": {
+        "dni": "87654321B",
+        "name": "Ana Martín",
+        "company": "Consultora XYZ"
+      },
+      "visit": {
+        "name": "Carlos Ruiz",
+        "dg": "Dirección Financiera",
+        "orgUnit": "Departamento de Finanzas",
+        "service": "Contabilidad",
+        "location": "Planta 3, Oficina 315",
+        "phone": "93 234 56 78"
+      },
+      "status": "active",
+      "createdAt": "2024-06-20T08:15:00Z",
+      "visitDetails": {
+        "reason": "Auditoría",
+        "cardNumber": "002",
+        "visitors": 2,
+        "color": "rojo",
+        "observations": "Requiere acceso a archivo",
+        "date": "2024-06-20",
+        "hourIni": "08:15:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 3,
+      "visitor": {
+        "dni": "test",
+        "name": "test",
+        "company": "test"
+      },
+      "visit": {
+        "name": "María González",
+        "dg": "Dirección de RRHH",
+        "orgUnit": "Departamento Comercial",
+        "service": "Ventas",
+        "location": "Planta 2, Oficina 201",
+        "phone": "93 123 45 67"
+      },
+      "status": "pending",
+      "createdAt": "2025-06-20T09:24:51.484Z",
+      "visitDetails": {
+        "reason": "test",
+        "cardNumber": "1",
+        "visitors": 1,
+        "color": "1",
+        "observations": "asd",
+        "date": "2025-06-20",
+        "hourIni": "09:24:51",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 4,
+      "visitor": {
+        "dni": "45678912C",
+        "name": "Roberto Silva",
+        "company": "TechSolutions"
+      },
+      "visit": {
+        "name": "Laura Sánchez",
+        "dg": "Dirección de RRHH",
+        "orgUnit": "Recursos Humanos",
+        "service": "Selección",
+        "location": "Planta 1, Oficina 105",
+        "phone": "93 345 67 89"
+      },
+      "status": "completed",
+      "createdAt": "2025-06-21T14:30:00Z",
+      "visitDetails": {
+        "reason": "Presentación de proyecto",
+        "cardNumber": "003",
+        "visitors": 1,
+        "color": "verde",
+        "observations": "Traer equipo de demostración",
+        "date": "2025-06-21",
+        "hourIni": "14:30:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 5,
+      "visitor": {
+        "dni": "32165498D",
+        "name": "Elena Rodríguez",
+        "company": "Banco Central"
+      },
+      "visit": {
+        "name": "David López",
+        "dg": "Dirección Financiera",
+        "orgUnit": "Departamento de Finanzas",
+        "service": "Tesorería",
+        "location": "Planta 3, Oficina 320",
+        "phone": "93 456 78 90"
+      },
+      "status": "active",
+      "createdAt": "2025-06-22T10:15:00Z",
+      "visitDetails": {
+        "reason": "Negociación de crédito",
+        "cardNumber": "004",
+        "visitors": 3,
+        "color": "amarillo",
+        "observations": "Reunión con directivos",
+        "date": "2025-06-22",
+        "hourIni": "10:15:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 6,
+      "visitor": {
+        "dni": "78945612E",
+        "name": "Miguel Torres",
+        "company": "Ingeniería Avanzada"
+      },
+      "visit": {
+        "name": "Patricia Morales",
+        "dg": "Dirección de IT",
+        "orgUnit": "Departamento de Sistemas",
+        "service": "Infraestructura",
+        "location": "Planta 4, Oficina 410",
+        "phone": "93 567 89 01"
+      },
+      "status": "pending",
+      "createdAt": "2025-06-22T16:45:00Z",
+      "visitDetails": {
+        "reason": "Mantenimiento técnico",
+        "cardNumber": "005",
+        "visitors": 2,
+        "color": "naranja",
+        "observations": "Acceso a sala de servidores",
+        "date": "2025-06-22",
+        "hourIni": "16:45:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 7,
+      "visitor": {
+        "dni": "65432198F",
+        "name": "Carmen Jiménez",
+        "company": "Legal & Partners"
+      },
+      "visit": {
+        "name": "Antonio García",
+        "dg": "Dirección General",
+        "orgUnit": "Departamento Legal",
+        "service": "Asesoría",
+        "location": "Planta 2, Oficina 210",
+        "phone": "93 678 90 12"
+      },
+      "status": "active",
+      "createdAt": "2025-06-23T09:00:00Z",
+      "visitDetails": {
+        "reason": "Asesoría legal",
+        "cardNumber": "006",
+        "visitors": 1,
+        "color": "violeta",
+        "observations": "Documentación confidencial",
+        "date": "2025-06-23",
+        "hourIni": "09:00:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 8,
+      "visitor": {
+        "dni": "98765432G",
+        "name": "Fernando Vega",
+        "company": "Proveedores Unidos"
+      },
+      "visit": {
+        "name": "Silvia Herrera",
+        "dg": "Dirección de Operaciones",
+        "orgUnit": "Departamento de Logística",
+        "service": "Compras",
+        "location": "Planta 1, Oficina 120",
+        "phone": "93 789 01 23"
+      },
+      "status": "completed",
+      "createdAt": "2025-06-23T07:30:00Z",
+      "visitDetails": {
+        "reason": "Entrega de suministros",
+        "cardNumber": "007",
+        "visitors": 1,
+        "color": "gris",
+        "observations": "Acceso a almacén",
+        "date": "2025-06-23",
+        "hourIni": "07:30:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 9,
+      "visitor": {
+        "dni": "14785236H",
+        "name": "Lucía Mendoza",
+        "company": "Marketing Digital"
+      },
+      "visit": {
+        "name": "Raúl Navarro",
+        "dg": "Dirección Comercial",
+        "orgUnit": "Departamento de Marketing",
+        "service": "Comunicación",
+        "location": "Planta 2, Oficina 230",
+        "phone": "93 890 12 34"
+      },
+      "status": "pending",
+      "createdAt": "2025-06-23T11:20:00Z",
+      "visitDetails": {
+        "reason": "Campaña publicitaria",
+        "cardNumber": "008",
+        "visitors": 2,
+        "color": "rosa",
+        "observations": "Presentación multimedia",
+        "date": "2025-06-23",
+        "hourIni": "11:20:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 10,
+      "visitor": {
+        "dni": "36925814I",
+        "name": "Alberto Castillo",
+        "company": "Seguros Generales"
+      },
+      "visit": {
+        "name": "Beatriz Ortega",
+        "dg": "Dirección Administrativa",
+        "orgUnit": "Departamento Administrativo",
+        "service": "Gestión",
+        "location": "Planta 1, Oficina 115",
+        "phone": "93 901 23 45"
+      },
+      "status": "active",
+      "createdAt": "2025-06-23T13:45:00Z",
+      "visitDetails": {
+        "reason": "Renovación de póliza",
+        "cardNumber": "009",
+        "visitors": 1,
+        "color": "marrón",
+        "observations": "Revisar cobertura actual",
+        "date": "2025-06-23",
+        "hourIni": "13:45:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 11,
+      "visitor": {
+        "dni": "25814736J",
+        "name": "Gloria Ramos",
+        "company": "Consultoría Estratégica"
+      },
+      "visit": {
+        "name": "Javier Delgado",
+        "dg": "Dirección General",
+        "orgUnit": "Departamento de Desarrollo",
+        "service": "Estrategia",
+        "location": "Planta 3, Oficina 305",
+        "phone": "93 012 34 56"
+      },
+      "status": "pending",
+      "createdAt": "2025-06-23T15:10:00Z",
+      "visitDetails": {
+        "reason": "Análisis organizacional",
+        "cardNumber": "010",
+        "visitors": 3,
+        "color": "turquesa",
+        "observations": "Entrevistas con personal",
+        "date": "2025-06-23",
+        "hourIni": "15:10:00",
+        "hourFi": null
+      }
+    },
+    {
+      "id": 12,
+      "visitor": {
+        "dni": "74185296K",
+        "name": "Marcos Peña",
+        "company": "Servicios Técnicos"
+      },
+      "visit": {
+        "name": "Cristina Vargas",
+        "dg": "Dirección de IT",
+        "orgUnit": "Departamento de Sistemas",
+        "service": "Soporte",
+        "location": "Planta 4, Oficina 425",
+        "phone": "93 123 45 67"
+      },
+      "status": "completed",
+      "createdAt": "2025-06-23T16:30:00Z",
+      "endTime": "2025-06-23T10:33:06.186Z",
+      "dischargeObservations": "",
+      "visitDetails": {
+        "reason": "Instalación de equipos",
+        "cardNumber": "011",
+        "visitors": 2,
+        "color": "cian",
+        "observations": "Herramientas especializadas",
+        "date": "2025-06-23",
+        "hourIni": "16:30:00",
+        "hourFi": "10:33:06"
+      }
+    },
+    {
+      "id": 13,
+      "visitor": {
+        "dni": "85296374L",
+        "name": "Nuria Campos",
+        "company": "Recursos Humanos Plus"
+      },
+      "visit": {
+        "name": "Laura Sánchez",
+        "dg": "Dirección de RRHH",
+        "orgUnit": "Recursos Humanos",
+        "service": "Selección",
+        "location": "Planta 1, Oficina 105",
+        "phone": "93 345 67 89"
+      },
+      "status": "completed",
+      "createdAt": "2025-06-23T12:00:00Z",
+      "visitDetails": {
+        "reason": "Selección de personal",
+        "cardNumber": "012",
+        "visitors": 1,
+        "color": "lavanda",
+        "observations": "Proceso de selección",
+        "date": "2025-06-23",
+        "hourIni": "12:00:00",
+        "hourFi": null
+      }
+    },
+    {
+      "visitor": {
+        "dni": "pepe",
+        "name": "asd",
+        "company": "asd"
+      },
+      "visit": {},
+      "status": "active",
+      "createdAt": "2025-06-23T10:56:55.878Z",
+      "id": 14,
+      "visitDetails": {
+        "reason": "aasd",
+        "cardNumber": "asd",
+        "visitors": 1,
+        "color": "ads",
+        "observations": "asd",
+        "date": "2025-06-23",
+        "hourIni": "10:56:55",
+        "hourFi": null
+      }
+    },
+    {
+      "visitor": {
+        "dni": "saas",
+        "name": "asd",
+        "company": "asd"
+      },
+      "visit": {},
+      "status": "active",
+      "createdAt": "2025-06-23T11:26:00.080Z",
+      "id": 15,
+      "visitDetails": {
+        "reason": "asd",
+        "cardNumber": "asd",
+        "visitors": 1,
+        "color": "",
+        "observations": "asd",
+        "date": "2025-06-23",
+        "hourIni": "11:26:00",
+        "hourFi": null
+      }
+    }
+  ],
+  "employees": [
+    {
+      "id": 1,
+      "name": "María González",
+      "dg": "Dirección General",
+      "orgUnit": "Departamento Comercial",
+      "service": "Ventas",
+      "location": "Planta 2, Oficina 201",
+      "phone": "93 123 45 67"
+    },
+    {
+      "id": 2,
+      "name": "Carlos Ruiz",
+      "dg": "Dirección Financiera",
+      "orgUnit": "Departamento de Finanzas",
+      "service": "Contabilidad",
+      "location": "Planta 3, Oficina 315",
+      "phone": "93 234 56 78"
+    },
+    {
+      "id": 3,
+      "name": "Laura Sánchez",
+      "dg": "Dirección de RRHH",
+      "orgUnit": "Recursos Humanos",
+      "service": "Selección",
+      "location": "Planta 1, Oficina 105",
+      "phone": "93 345 67 89"
+    },
+    {
+      "id": 4,
+      "name": "David López",
+      "dg": "Dirección Financiera",
+      "orgUnit": "Departamento de Finanzas",
+      "service": "Tesorería",
+      "location": "Planta 3, Oficina 320",
+      "phone": "93 456 78 90"
+    },
+    {
+      "id": 5,
+      "name": "Patricia Morales",
+      "dg": "Dirección de IT",
+      "orgUnit": "Departamento de Sistemas",
+      "service": "Infraestructura",
+      "location": "Planta 4, Oficina 410",
+      "phone": "93 567 89 01"
+    },
+    {
+      "id": 6,
+      "name": "Antonio García",
+      "dg": "Dirección General",
+      "orgUnit": "Departamento Legal",
+      "service": "Asesoría",
+      "location": "Planta 2, Oficina 210",
+      "phone": "93 678 90 12"
+    },
+    {
+      "id": 7,
+      "name": "Silvia Herrera",
+      "dg": "Dirección de Operaciones",
+      "orgUnit": "Departamento de Logística",
+      "service": "Compras",
+      "location": "Planta 1, Oficina 120",
+      "phone": "93 789 01 23"
+    },
+    {
+      "id": 8,
+      "name": "Raúl Navarro",
+      "dg": "Dirección Comercial",
+      "orgUnit": "Departamento de Marketing",
+      "service": "Comunicación",
+      "location": "Planta 2, Oficina 230",
+      "phone": "93 890 12 34"
+    },
+    {
+      "id": 9,
+      "name": "Beatriz Ortega",
+      "dg": "Dirección Administrativa",
+      "orgUnit": "Departamento Administrativo",
+      "service": "Gestión",
+      "location": "Planta 1, Oficina 115",
+      "phone": "93 901 23 45"
+    },
+    {
+      "id": 10,
+      "name": "Javier Delgado",
+      "dg": "Dirección General",
+      "orgUnit": "Departamento de Desarrollo",
+      "service": "Estrategia",
+      "location": "Planta 3, Oficina 305",
+      "phone": "93 012 34 56"
+    },
+    {
+      "id": 11,
+      "name": "Cristina Vargas",
+      "dg": "Dirección de IT",
+      "orgUnit": "Departamento de Sistemas",
+      "service": "Soporte",
+      "location": "Planta 4, Oficina 425",
+      "phone": "93 123 45 67"
+    }
+  ],
+  "statistics": {
+    "totalVisits": 245,
+    "todayVisits": 18,
+    "pendingVisits": 4,
+    "activeVisits": 5
+  }
+}
