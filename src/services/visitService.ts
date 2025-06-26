@@ -7,6 +7,11 @@ const JSON_SERVER_URL = process.env.JSON_SERVER_URL;
  * Construye un objeto con una estructura anidada (visitor, visit, visitDetails)
  * que se corresponde con el nuevo modelo de datos en `db.json`.
  */
+/**
+ * Crea una nueva visita.
+ * Construye un objeto con una estructura anidada (visitor, visit, visitDetails)
+ * que se corresponde con el nuevo modelo de datos en `db.json`.
+ */
 export const createVisit = async (payload: VisitRegistrationPayload) => {
   const { visitor, visitDetails, visit } = payload;
   const createdAt = new Date();
@@ -14,7 +19,27 @@ export const createVisit = async (payload: VisitRegistrationPayload) => {
   // Obtener datos del empleado
   const employeeData = await getEmployeeById(visit.employeeId);
 
+  // --- INICIO DE LA MODIFICACIÓN ---
+
+  // 1. Obtener todas las visitas para encontrar el ID máximo
+  const allVisitsResponse = await fetch(`${JSON_SERVER_URL}/visits`);
+  if (!allVisitsResponse.ok) {
+    throw new Error('Failed to fetch visits for ID calculation');
+  }
+  const allVisits = await allVisitsResponse.json();
+
+  // 2. Calcular el nuevo ID
+  const maxId = allVisits.reduce((max: number, v: any) => {
+    const currentId = parseInt(v.id, 10);
+    return !isNaN(currentId) && currentId > max ? currentId : max;
+  }, 0);
+
+  const newVisitId = maxId + 1;
+
+  // --- FIN DE LA MODIFICACIÓN ---
+
   const visitToCreate = {
+    id: newVisitId.toString(), // Asignar el nuevo ID
     visitor: {
       dni: visitor.dni,
       name: visitor.name,
@@ -49,6 +74,7 @@ export const createVisit = async (payload: VisitRegistrationPayload) => {
   
   return response.json();
 };
+
 
 /**
  * Obtiene una lista de visitas aplicando los filtros proporcionados.
