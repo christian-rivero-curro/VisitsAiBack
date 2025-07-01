@@ -1,186 +1,210 @@
+import pool from '../database/db';
 import { VisitRegistrationPayload } from '../types';
+import * as visitanteService from './visitanteService';
+import * as treballadorService from './treballadorService';
 
-const JSON_SERVER_URL = process.env.JSON_SERVER_URL;
-
-/**
- * Crea una nueva visita.
- * Construye un objeto con una estructura anidada (visitor, visit, visitDetails)
- * que se corresponde con el nuevo modelo de datos en `db.json`.
- */
-/**
- * Crea una nueva visita.
- * Construye un objeto con una estructura anidada (visitor, visit, visitDetails)
- * que se corresponde con el nuevo modelo de datos en `db.json`.
- */
 export const createVisit = async (payload: VisitRegistrationPayload) => {
-  const { visitor, visitDetails, visit } = payload;
-  const createdAt = new Date();
-
-  // Obtener datos del empleado
-  const employeeData = await getEmployeeById(visit.employeeId);
-
-  // --- INICIO DE LA MODIFICACIÓN ---
-
-  // 1. Obtener todas las visitas para encontrar el ID máximo
-  const allVisitsResponse = await fetch(`${JSON_SERVER_URL}/visits`);
-  if (!allVisitsResponse.ok) {
-    throw new Error('Failed to fetch visits for ID calculation');
-  }
-  const allVisits = await allVisitsResponse.json();
-
-  // 2. Calcular el nuevo ID
-  const maxId = allVisits.reduce((max: number, v: any) => {
-    const currentId = parseInt(v.id, 10);
-    return !isNaN(currentId) && currentId > max ? currentId : max;
-  }, 0);
-
-  const newVisitId = maxId + 1;
-
-  // --- FIN DE LA MODIFICACIÓN ---
-
-  const visitToCreate = {
-    id: newVisitId.toString(), // Asignar el nuevo ID
-    visitor: {
-      dni: visitor.dni,
-      name: visitor.name,
-      company: visitor.company
-    },
-    visit: {
-      ...employeeData
-    },
-    visitDetails: {
-      reason: visitDetails.reason,
-      cardNumber: visitDetails.cardNumber,
-      visitors: visitDetails.visitors,
-      color: visitDetails.color,
-      observations: visitDetails.observations,
-      date: createdAt.toISOString().split('T')[0],
-      hourIni: createdAt.toTimeString().split(' ')[0],
-      hourFi: null,
-    },
-    status: 'active',
-    createdAt: createdAt.toISOString()
-  };
-
-  const response = await fetch(`${JSON_SERVER_URL}/visits`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(visitToCreate)
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to create visit in json-server');
-  }
+  const client = await pool.connect();
   
-  return response.json();
-};
-
-
-/**
- * Obtiene una lista de visitas aplicando los filtros proporcionados.
- */
-export const getVisits = async (filters: any) => {
-    const query = new URLSearchParams();
+  try {
+    await client.query('BEGIN');
     
-    // Filtros básicos que json-server puede manejar directamente
-    if (filters.status) {
-        query.append('status', filters.status);
-    }
-
-    const response = await fetch(`${JSON_SERVER_URL}/visits?${query.toString()}`);
-    if (!response.ok) {
-        throw new Error('Failed to fetch visits');
-    }
-
-    let visits = await response.json();
+    const { visitor, visitDetails, visit } = payload;
     
-    // Filtrado manual para campos anidados y fechas
-    if (filters.name_like) {
-        const searchTerm = filters.name_like.toLowerCase();
-        visits = visits.filter((v: any) => 
-            v.visitor?.name?.toLowerCase().includes(searchTerm)
-        );
+    // 1. Verificar si el trabajador existe
+    const treballador = await treballadorService.getTreballadorById(visit.employeeId);
+    if (!treballador) {
+      throw new Error(`Employee with id ${visit.employeeId} not found`);
     }
     
-    if (filters.dni_like) {
-        const searchTerm = filters.dni_like.toLowerCase();
-        visits = visits.filter((v: any) => 
-            v.visitor?.dni?.toLowerCase().includes(searchTerm)
-        );
+    // 2. Buscar o crear visitante
+    let visitante = await visitanteService.getVisitanteByDni(visitor.dni);
+    if (!visitante) {
+      visitante = await visitanteService.createVisitante({
+        dni: visitor.dni,
+        nom: visitor.name,
+        empresa: visitor.company,
+        motiu: visitDetails.reason,
+        num_visitants: visitDetails.visitors || 1,
+        sexe: null,
+        observacions: visitDetails.observations,
+        desconegut: false
+      });
     }
     
-    if (filters.startDate) {
-        const start = new Date(filters.startDate);
-        start.setHours(0, 0, 0, 0);
-        visits = visits.filter((v: any) => new Date(v.createdAt) >= start);
-    }
-    
-    if (filters.endDate) {
-        const end = new Date(filters.endDate);
-        end.setHours(23, 59, 59, 999);
-        visits = visits.filter((v: any) => new Date(v.createdAt) <= end);
-    }
-
-    // Ordenar por fecha de creación descendente
-    visits.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    // Aplanar la respuesta para compatibilidad con el frontend
-    return visits.map((v: any) => ({
-        ...v,
-        visitor: {
-            ...v.visitor,
-            ...v.visitDetails
-        }
-    }));
-};
-
-/**
- * Da de baja una visita actualizando su estado y hora de fin.
- * Primero obtiene la visita completa, modifica los campos necesarios y la actualiza.
- */
-export const dischargeVisitor = async (id: number, observations: string) => {
-    // Primero obtenemos la visita completa
-    const getResponse = await fetch(`${JSON_SERVER_URL}/visits/${id}`);
-    if (!getResponse.ok) {
-        throw new Error('Failed to fetch visit for update');
-    }
-    
-    const currentVisit = await getResponse.json();
-    const endTime = new Date();
-    
-    // Actualizamos la estructura completa
-    const updatedVisit = {
-        ...currentVisit,
-        status: 'completed',
-        endTime: endTime.toISOString(),
-        dischargeObservations: observations,
-        visitDetails: {
-            ...currentVisit.visitDetails,
-            hourFi: endTime.toTimeString().split(' ')[0]
-        }
+    // 3. Crear la visita
+    const now = new Date();
+    const visitaData = {
+      visitante_id: visitante.id,
+      treballador_id: visit.employeeId,
+      delegacio_id: treballador.delegacio_id || 1, // Delegación por defecto
+      data_visita: now.toISOString().split('T')[0],
+      hora_ini: now.toTimeString().split(' ')[0],
+      hora_fi: null,
+      tarjeta_id: visitDetails.cardNumber,
+      pendent: true,
+      observacions: visitDetails.observations
     };
-
-    const response = await fetch(`${JSON_SERVER_URL}/visits/${id}`, {
-        method: 'PUT', // Usamos PUT para reemplazar el objeto completo
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedVisit)
-    });
-
-    if (!response.ok) {
-        throw new Error('Failed to update visit in json-server');
-    }
+    
+    const query = `
+      INSERT INTO visita (visitante_id, treballador_id, delegacio_id, data_visita, hora_ini, hora_fi, tarjeta_id, pendent, observacions)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *
+    `;
+    
+    const result = await client.query(query, [
+      visitaData.visitante_id,
+      visitaData.treballador_id,
+      visitaData.delegacio_id,
+      visitaData.data_visita,
+      visitaData.hora_ini,
+      visitaData.hora_fi,
+      visitaData.tarjeta_id,
+      visitaData.pendent,
+      visitaData.observacions
+    ]);
+    
+    await client.query('COMMIT');
+    
+    return {
+      id: result.rows[0].id,
+      ...visitaData,
+      visitante,
+      treballador
+    };
+    
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
-/**
- * Función auxiliar para obtener los datos de un empleado por su ID.
- */
-async function getEmployeeById(id: number) {
-    const res = await fetch(`${JSON_SERVER_URL}/employees/${id}`);
-    if (!res.ok) {
-        console.error(`Employee with id ${id} not found.`);
-        return {};
+export const getVisits = async (filters: any) => {
+  try {
+    let query = `
+      SELECT 
+        v.*,
+        vt.dni as visitante_dni,
+        vt.nom as visitante_nom,
+        vt.empresa as visitante_empresa,
+        t.nom_complet as treballador_nom,
+        t.primer_cognom as treballador_cognom,
+        t.servei as treballador_servei,
+        t.unitat_organica as treballador_unitat,
+        d.nom as delegacio_nom
+      FROM visita v
+      JOIN visitante vt ON v.visitante_id = vt.id
+      JOIN treballador t ON v.treballador_id = t.id
+      JOIN delegacio d ON v.delegacio_id = d.id
+    `;
+
+    const conditions = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (filters.startDate) {
+      conditions.push(`v.data_visita >= $${paramCount++}`);
+      values.push(filters.startDate);
     }
-    const employee = await res.json();
-    const { id: empId, ...rest } = employee;
-    return rest;
-}
+
+    if (filters.endDate) {
+      conditions.push(`v.data_visita <= $${paramCount++}`);
+      values.push(filters.endDate);
+    }
+
+    if (filters.status) {
+      if (filters.status === 'active') {
+        conditions.push('v.pendent = true');
+      } else if (filters.status === 'completed') {
+        conditions.push('v.pendent = false');
+      }
+    }
+
+    if (filters.name_like) {
+      conditions.push(`vt.nom ILIKE $${paramCount++}`);
+      values.push(`%${filters.name_like}%`);
+    }
+
+    if (filters.dni_like) {
+      conditions.push(`vt.dni ILIKE $${paramCount++}`);
+      values.push(`%${filters.dni_like}%`);
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY v.data_visita DESC, v.hora_ini DESC';
+
+    const result = await pool.query(query, values);
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      visitor: {
+        dni: row.visitante_dni,
+        name: row.visitante_nom,
+        company: row.visitante_empresa,
+        reason: row.observacions,
+        cardNumber: row.tarjeta_id,
+        visitors: 1,
+        color: '',
+        observations: row.observacions,
+        date: row.data_visita,
+        hourIni: row.hora_ini,
+        hourFi: row.hora_fi
+      },
+      visit: {
+        name: row.treballador_nom || `${row.treballador_cognom}`,
+        dg: '',
+        orgUnit: row.treballador_unitat || '',
+        service: row.treballador_servei || '',
+        location: row.delegacio_nom,
+        phone: ''
+      },
+      visitDetails: {
+        reason: row.observacions,
+        cardNumber: row.tarjeta_id,
+        visitors: 1,
+        color: '',
+        observations: row.observacions,
+        date: row.data_visita,
+        hourIni: row.hora_ini,
+        hourFi: row.hora_fi
+      },
+      status: row.pendent ? 'active' : 'completed',
+      createdAt: new Date(row.data_visita + ' ' + row.hora_ini).toISOString()
+    }));
+  } catch (error) {
+    console.error('Error in getVisits:', error);
+    throw new Error('Failed to fetch visits from database');
+  }
+};
+
+export const dischargeVisitor = async (id: number, observations: string) => {
+  try {
+    const now = new Date();
+    const query = `
+      UPDATE visita 
+      SET hora_fi = $1, pendent = false, observacions = COALESCE(observacions || ' | ', '') || $2
+      WHERE id = $3
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [
+      now.toTimeString().split(' ')[0],
+      observations,
+      id
+    ]);
+    
+    if (result.rowCount === 0) {
+      throw new Error('Visit not found');
+    }
+    
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error in dischargeVisitor:', error);
+    throw new Error('Failed to discharge visitor');
+  }
+};

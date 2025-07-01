@@ -1,95 +1,70 @@
-const JSON_SERVER_URL = process.env.JSON_SERVER_URL;
+import pool from '../database/db';
 
 export const getStatistics = async () => {
-    if (!JSON_SERVER_URL) {
-        throw new Error('JSON_SERVER_URL environment variable is not configured');
-    }
+  try {
+    // 1. Resumen general
+    const summaryQuery = `
+      SELECT 
+        COUNT(*) as total_visits,
+        COUNT(CASE WHEN pendent = true THEN 1 END) as active_visits,
+        COUNT(DISTINCT t.unitat_organica) as distinct_org_units
+      FROM visita v
+      JOIN treballador t ON v.treballador_id = t.id
+      WHERE v.data_visita >= CURRENT_DATE - INTERVAL '30 days'
+    `;
+    
+    const summaryResult = await pool.query(summaryQuery);
+    const summary = {
+      totalVisits: parseInt(summaryResult.rows[0].total_visits),
+      activeVisits: parseInt(summaryResult.rows[0].active_visits),
+      distinctOrgUnits: parseInt(summaryResult.rows[0].distinct_org_units)
+    };
 
-    try {
-        const visitsResponse = await fetch(`${JSON_SERVER_URL}/visits`);
-        
-        if (!visitsResponse.ok) {
-            throw new Error(`Failed to fetch visits: ${visitsResponse.status} ${visitsResponse.statusText}`);
-        }
-        
-        const visits = await visitsResponse.json();
+    // 2. Por día de la semana
+    const weekdayQuery = `
+      SELECT 
+        CASE EXTRACT(DOW FROM data_visita)
+          WHEN 1 THEN 'Dilluns'
+          WHEN 2 THEN 'Dimarts'
+          WHEN 3 THEN 'Dimecres'
+          WHEN 4 THEN 'Dijous'
+          WHEN 5 THEN 'Divendres'
+        END as day,
+        COUNT(*) as count
+      FROM visita
+      WHERE data_visita >= CURRENT_DATE - INTERVAL '30 days'
+        AND EXTRACT(DOW FROM data_visita) BETWEEN 1 AND 5
+      GROUP BY EXTRACT(DOW FROM data_visita)
+      ORDER BY EXTRACT(DOW FROM data_visita)
+    `;
+    
+    const weekdayResult = await pool.query(weekdayQuery);
+    const byWeekday = weekdayResult.rows;
 
-        // Validar que la respuesta sea un array
-        if (!Array.isArray(visits)) {
-            throw new Error('Invalid response format: expected array of visits');
-        }
+    // 3. Por unidad organizativa
+    const orgUnitQuery = `
+      SELECT 
+        COALESCE(t.unitat_organica, 'Sense especificar') as orgUnit,
+        COUNT(*) as count
+      FROM visita v
+      JOIN treballador t ON v.treballador_id = t.id
+      WHERE v.data_visita >= CURRENT_DATE - INTERVAL '30 days'
+      GROUP BY t.unitat_organica
+      HAVING COUNT(*) > 1
+      ORDER BY COUNT(*) DESC
+    `;
+    
+    const orgUnitResult = await pool.query(orgUnitQuery);
+    const byOrgUnit = orgUnitResult.rows;
 
-        // 1. Summary
-        const totalVisits = visits.length;
-        const activeVisits = visits.filter((v: any) => v.status === 'active').length;
-        
-        // Obtener unidades organizacionales únicas de forma más robusta
-        const orgUnits = visits
-            .map((v: any) => v.visit?.orgUnit)
-            .filter((orgUnit: any) => orgUnit && orgUnit.trim() !== '')
-            .filter((orgUnit: any, index: number, arr: any[]) => arr.indexOf(orgUnit) === index);
-        
-        const distinctOrgUnits = orgUnits.length;
-
-        // 2. By Weekday
-        const weekdayCounts: { [key: string]: number } = {
-            'Dilluns': 0,
-            'Dimarts': 0,
-            'Dimecres': 0,
-            'Dijous': 0,
-            'Divendres': 0
-        };
-        
-        const dayNames = ['Diumenge', 'Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte'];
-        
-        visits.forEach((v: any) => {
-            if (v.createdAt) {
-                try {
-                    const date = new Date(v.createdAt);
-                    const dayIndex = date.getDay();
-                    
-                    // Solo días laborables (Lunes a Viernes)
-                    if (dayIndex >= 1 && dayIndex <= 5) {
-                        const dayName = dayNames[dayIndex];
-                        if (weekdayCounts.hasOwnProperty(dayName)) {
-                            weekdayCounts[dayName]++;
-                        }
-                    }
-                } catch (error) {
-                    console.warn(`Invalid date format in visit: ${v.createdAt}`);
-                }
-            }
-        });
-
-        const byWeekday = Object.entries(weekdayCounts).map(([day, count]) => ({ day, count }));
-
-        // 3. By Org Unit
-        const orgUnitCounts: { [key: string]: number } = {};
-        
-        visits.forEach((v: any) => {
-            const orgUnit = v.visit?.orgUnit?.trim() || 'Sense especificar';
-            orgUnitCounts[orgUnit] = (orgUnitCounts[orgUnit] || 0) + 1;
-        });
-
-        const byOrgUnit = Object.entries(orgUnitCounts)
-            .filter(([_, count]) => count > 1) // Solo mostrar unidades con más de 1 visita
-            .map(([orgUnit, count]) => ({ orgUnit, count }))
-            .sort((a, b) => b.count - a.count); // Ordenar por cantidad descendente
-
-        return {
-            summary: { 
-                totalVisits, 
-                activeVisits, 
-                distinctOrgUnits 
-            },
-            byWeekday,
-            byOrgUnit
-        };
-        
-    } catch (error) {
-        if (error instanceof Error) {
-            throw error;
-        }
-        throw new Error('Unknown error occurred while fetching statistics');
-    }
+    return {
+      summary,
+      byWeekday,
+      byOrgUnit
+    };
+    
+  } catch (error) {
+    console.error('Database error in getStatistics:', error);
+    throw new Error('Failed to fetch statistics from database');
+  }
 };

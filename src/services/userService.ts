@@ -1,54 +1,51 @@
-const JSON_SERVER_URL = process.env.JSON_SERVER_URL;
+import pool from '../database/db';
 
 export const getAllUsers = async () => {
-    if (!JSON_SERVER_URL) {
-        throw new Error('JSON_SERVER_URL environment variable is not configured');
-    }
-
-    try {
-        const response = await fetch(`${JSON_SERVER_URL}/users`);
-        
-        if (!response.ok) {
-            throw new Error(`Failed to fetch users from json-server: ${response.status} ${response.statusText}`);
-        }
-        
-        const users = await response.json();
-        
-        if (!Array.isArray(users)) {
-            throw new Error('Invalid response format: expected array of users');
-        }
-        
-        return users;
-    } catch (error) {
-        if (error instanceof Error) {
-            throw error;
-        }
-        throw new Error('Unknown error occurred while fetching users');
-    }
+  try {
+    const query = `
+      SELECT 
+        dni as id,
+        nom_complet as "fullName",
+        rol as role,
+        d.nom as building,
+        NOW() as "lastAccess"
+      FROM treballador t
+      LEFT JOIN delegacio d ON t.delegacio_id = d.id
+      WHERE rol IS NOT NULL
+      ORDER BY nom_complet
+    `;
+    
+    const result = await pool.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error('Database error in getAllUsers:', error);
+    throw new Error('Failed to fetch users from database');
+  }
 };
 
 export const getUserById = async (id: string) => {
-    if (!JSON_SERVER_URL) {
-        throw new Error('JSON_SERVER_URL environment variable is not configured');
+  try {
+    const query = `
+      SELECT 
+        dni as id,
+        nom_complet as "fullName",
+        rol as role,
+        d.nom as building,
+        NOW() as "lastAccess"
+      FROM treballador t
+      LEFT JOIN delegacio d ON t.delegacio_id = d.id
+      WHERE dni = $1
+    `;
+    
+    const result = await pool.query(query, [id]);
+    
+    if (result.rows.length === 0) {
+      return null;
     }
-
-    try {
-        const response = await fetch(`${JSON_SERVER_URL}/users/${id}`);
-        
-        if (!response.ok) {
-            if (response.status === 404) {
-                return null; // User not found
-            }
-            throw new Error(`Failed to fetch user from json-server: ${response.status} ${response.statusText}`);
-        }
-        
-        const user = await response.json();
-        
-        return user;
-    } catch (error) {
-        if (error instanceof Error) {
-            throw error;
-        }
-        throw new Error('Unknown error occurred while fetching user by ID');
-    }
+    
+    return result.rows[0];
+  } catch (error) {
+    console.error('Database error in getUserById:', error);
+    throw new Error('Failed to fetch user by ID from database');
+  }
 };

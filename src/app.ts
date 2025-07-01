@@ -4,14 +4,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Ya no importamos la conexión a la BD
-// import { connectDB } from './database/db'; 
+// Importar la conexión a la BD
+import pool from './database/db';
 
 import employeeRoutes from './api/employeeRoutes';
 import visitRoutes from './api/visitRoutes';
 import statisticsRoutes from './api/statisticsRoutes';
-import userRoutes from './api/userRoutes'; // New: Import user routes
-
+import userRoutes from './api/userRoutes';
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -20,30 +19,41 @@ const port = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
-// Middleware para logging de requests (opcional, útil para desarrollo)
+// Middleware para logging de requests
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    service: 'visitors-backend',
-    version: '1.0.0'
-  });
+// Health check endpoint con verificación de BD
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      service: 'visitors-backend',
+      version: '1.0.0',
+      database: 'Connected'
+    });
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'ERROR', 
+      timestamp: new Date().toISOString(),
+      service: 'visitors-backend',
+      version: '1.0.0',
+      database: 'Disconnected'
+    });
+  }
 });
-
 
 // API Routes
 app.use('/api/employees', employeeRoutes);
 app.use('/api/visits', visitRoutes);
 app.use('/api/statistics', statisticsRoutes);
-app.use('/api/users', userRoutes); // New: Use user routes
+app.use('/api/users', userRoutes);
 
-// Middleware para manejar rutas no encontradas globalmente
+// Middleware para rutas no encontradas
 app.use('*', (req, res) => {
   res.status(404).json({
     message: 'API endpoint not found',
@@ -55,13 +65,12 @@ app.use('*', (req, res) => {
       'POST /api/visits',
       'PATCH /api/visits/:id',
       'GET /api/statistics',
-      'GET /api/users', // New: Add to available endpoints
-      'GET /api/users/:id' // New: Add to available endpoints
+      'GET /api/users',
+      'GET /api/users/:id'
     ]
   });
 });
 
-// La función de arranque ahora es más simple
 app.listen(port, () => {
-  console.log(`Backend server (connected to json-server) running at http://localhost:${port}`);
+  console.log(`Backend server (connected to PostgreSQL) running at http://localhost:${port}`);
 });

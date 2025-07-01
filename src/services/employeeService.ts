@@ -1,31 +1,50 @@
+import pool from '../database/db';
 import { Employee } from '../types';
 
-const JSON_SERVER_URL = process.env.JSON_SERVER_URL;
-
 export const getAllEmployees = async (): Promise<Employee[]> => {
-  if (!JSON_SERVER_URL) {
-    throw new Error('JSON_SERVER_URL environment variable is not configured');
-  }
-
   try {
-    const response = await fetch(`${JSON_SERVER_URL}/employees`);
+    const query = `
+      SELECT 
+        t.id,
+        COALESCE(t.nom_complet, CONCAT(t.primer_cognom, ' ', t.segon_cognom)) as name,
+        COALESCE(t.direccio_general, '') as dg,
+        COALESCE(t.unitat_organica, '') as orgUnit,
+        COALESCE(t.servei, '') as service,
+        COALESCE(t.ubicacio, d.nom, '') as location,
+        COALESCE(t.numero, '') as phone
+      FROM treballador t
+      LEFT JOIN delegacio d ON t.delegacio_id = d.id
+      ORDER BY t.primer_cognom, t.segon_cognom
+    `;
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch employees from json-server: ${response.status} ${response.statusText}`);
-    }
-    
-    const employees = await response.json();
-    
-    // Validar que la respuesta sea un array
-    if (!Array.isArray(employees)) {
-      throw new Error('Invalid response format: expected array of employees');
-    }
-    
-    return employees;
+    const result = await pool.query(query);
+    return result.rows;
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error occurred while fetching employees');
+    console.error('Error in getAllEmployees:', error);
+    throw new Error('Failed to fetch employees from database');
+  }
+};
+
+export const getEmployeeById = async (id: number): Promise<Employee | null> => {
+  try {
+    const query = `
+      SELECT 
+        t.id,
+        COALESCE(t.nom_complet, CONCAT(t.primer_cognom, ' ', t.segon_cognom)) as name,
+        COALESCE(t.direccio_general, '') as dg,
+        COALESCE(t.unitat_organica, '') as orgUnit,
+        COALESCE(t.servei, '') as service,
+        COALESCE(t.ubicacio, d.nom, '') as location,
+        COALESCE(t.numero, '') as phone
+      FROM treballador t
+      LEFT JOIN delegacio d ON t.delegacio_id = d.id
+      WHERE t.id = $1
+    `;
+    
+    const result = await pool.query(query, [id]);
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Error in getEmployeeById:', error);
+    throw new Error('Failed to fetch employee from database');
   }
 };
