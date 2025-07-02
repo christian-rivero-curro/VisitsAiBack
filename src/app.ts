@@ -1,60 +1,51 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Importar la conexión a la BD
 import pool from './database/db';
-
-import employeeRoutes from './api/employeeRoutes';
-import visitRoutes from './api/visitRoutes';
-import statisticsRoutes from './api/statisticsRoutes';
-import userRoutes from './api/userRoutes';
+import routes from './routes'; // tu único archivo de rutas
 
 const app = express();
 const port = process.env.PORT || 3002;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Middleware para logging de requests
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+// Logging middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
   next();
 });
 
-// Health check endpoint con verificación de BD
-app.get('/health', async (req, res) => {
+// Health check
+app.get('/health', async (req: Request, res: Response) => {
   try {
     await pool.query('SELECT 1');
-    res.json({ 
-      status: 'OK', 
+    res.json({
+      status: 'OK',
       timestamp: new Date().toISOString(),
       service: 'visitors-backend',
       version: '1.0.0',
-      database: 'Connected'
+      database: 'Connected',
     });
-  } catch (error) {
-    res.status(503).json({ 
-      status: 'ERROR', 
+  } catch {
+    res.status(503).json({
+      status: 'ERROR',
       timestamp: new Date().toISOString(),
       service: 'visitors-backend',
       version: '1.0.0',
-      database: 'Disconnected'
+      database: 'Disconnected',
     });
   }
 });
 
-// API Routes
-app.use('/api/employees', employeeRoutes);
-app.use('/api/visits', visitRoutes);
-app.use('/api/statistics', statisticsRoutes);
-app.use('/api/users', userRoutes);
+// Usar las rutas centralizadas
+app.use('/api', routes);
 
-// Middleware para rutas no encontradas
-app.use('*', (req, res) => {
+// 404 handler para rutas no encontradas
+app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
     message: 'API endpoint not found',
     error: `Route ${req.method} ${req.originalUrl} does not exist`,
@@ -64,13 +55,10 @@ app.use('*', (req, res) => {
       'GET /api/visits',
       'POST /api/visits',
       'PATCH /api/visits/:id',
-      'GET /api/statistics',
-      'GET /api/users',
-      'GET /api/users/:id'
-    ]
+    ],
   });
 });
 
 app.listen(port, () => {
-  console.log(`Backend server (connected to PostgreSQL) running at http://localhost:${port}`);
+  console.log(`Backend server running at http://localhost:${port}`);
 });

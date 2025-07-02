@@ -1,50 +1,40 @@
-import pool from '../database/db';
 import { Employee } from '../types';
+import pool from '../database/db';
 
-export const getAllEmployees = async (): Promise<Employee[]> => {
-  try {
-    const query = `
-      SELECT 
-        t.id,
-        COALESCE(t.nom_complet, CONCAT(t.primer_cognom, ' ', t.segon_cognom)) as name,
-        COALESCE(t.direccio_general, '') as dg,
-        COALESCE(t.unitat_organica, '') as orgUnit,
-        COALESCE(t.servei, '') as service,
-        COALESCE(t.ubicacio, d.nom, '') as location,
-        COALESCE(t.numero, '') as phone
-      FROM treballador t
-      LEFT JOIN delegacio d ON t.delegacio_id = d.id
-      ORDER BY t.primer_cognom, t.segon_cognom
-    `;
-    
-    const result = await pool.query(query);
-    return result.rows;
-  } catch (error) {
-    console.error('Error in getAllEmployees:', error);
-    throw new Error('Failed to fetch employees from database');
-  }
-};
+export class EmployeeService {
+  // Obtener todos los empleados desde PostgreSQL
+  async getAllEmployees(): Promise<Employee[]> {
+    try {
+      const query = `
+        SELECT
+          id,
+          nom_complet,
+          primer_cognom,
+          segon_cognom,
+          direccio_general,
+          unitat_organica,
+          servei,
+          ubicacio,
+          numero
+        FROM treballador
+      `;
 
-export const getEmployeeById = async (id: number): Promise<Employee | null> => {
-  try {
-    const query = `
-      SELECT 
-        t.id,
-        COALESCE(t.nom_complet, CONCAT(t.primer_cognom, ' ', t.segon_cognom)) as name,
-        COALESCE(t.direccio_general, '') as dg,
-        COALESCE(t.unitat_organica, '') as orgUnit,
-        COALESCE(t.servei, '') as service,
-        COALESCE(t.ubicacio, d.nom, '') as location,
-        COALESCE(t.numero, '') as phone
-      FROM treballador t
-      LEFT JOIN delegacio d ON t.delegacio_id = d.id
-      WHERE t.id = $1
-    `;
-    
-    const result = await pool.query(query, [id]);
-    return result.rows[0] || null;
-  } catch (error) {
-    console.error('Error in getEmployeeById:', error);
-    throw new Error('Failed to fetch employee from database');
+      const result = await pool.query(query);
+
+      const employees: Employee[] = result.rows.map((row) => ({
+        id: row.id,
+        name: row.nom_complet || `${row.primer_cognom} ${row.segon_cognom ?? ''}`.trim(),
+        dg: row.direccio_general || '',
+        orgUnit: row.unitat_organica || '',
+        service: row.servei || '',
+        location: row.ubicacio || '',
+        phone: row.numero || '',
+      }));
+
+      return employees;
+    } catch (error) {
+      console.error('Error al obtener empleados:', error);
+      throw error;
+    }
   }
-};
+}

@@ -17,7 +17,9 @@ pool.connect((err, client, release) => {
     return console.error('Error acquiring client', err.stack);
   }
   console.log('¡Conexión a la base de datos PostgreSQL exitosa!');
-  client.release();
+  if (client) {
+    client.release();
+  }
 });
 
 export default pool;
