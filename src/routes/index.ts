@@ -10,7 +10,9 @@ router.get('/employees', EmployeeController.getAllEmployees);
 
 // Visitas
 router.get('/visits', VisitVisitorController.getAllVisits);
+router.get('/visitas', VisitVisitorController.getAllVisits);
 router.patch('/visits/:id', VisitVisitorController.updateVisit);
+router.patch('/visitas/:id', VisitVisitorController.updateVisit);
 
 // Crear visita
 router.post('/visits', VisitCreationController.createVisit);
